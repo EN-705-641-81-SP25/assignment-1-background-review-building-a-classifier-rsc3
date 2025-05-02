@@ -84,7 +84,6 @@ def create_tensor_dataset(raw_data: Dict[str, List[Union[int, str]]],
         # only add the feature and label to the list if the feature is not None
 
         # your code ends here
-
     # stack all features and labels into two single tensors and create a TensorDataset
     features_tensor = torch.stack(all_features)
     labels_tensor = torch.tensor(all_labels, dtype=torch.long)
