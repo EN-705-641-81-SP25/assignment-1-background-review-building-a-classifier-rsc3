@@ -62,7 +62,7 @@ def featurize(sentence: str, embeddings: gensim.models.keyedvectors.KeyedVectors
     # map each word to its embedding
     for word in word_tokenize(sentence.lower()):
         try:
-            vectors.append(embeddings[word])
+            vectors.append(torch.from_numpy(embeddings[word]))
         except KeyError:
             pass
 
@@ -115,20 +115,13 @@ class SentimentClassifier(nn.Module):
         super().__init__()
         self.embed_dim = embed_dim
         self.num_classes = num_classes
-
-        # TODO: define the linear layer
-        # Hint: follow the hints in the pdf description
-
-        # your code ends here
+        self.linear = nn.Linear(embed_dim, num_classes)
 
         self.loss = nn.CrossEntropyLoss(reduction='mean')
 
     def forward(self, inp):
-        # TODO: complete the forward function
-        # Hint: follow the hints in the pdf description
-
-        # your code ends here
-
+        logits = self.linear(inp)
+        # logits is a tensor of shape (batch_size, num_classes)
         return logits
 
 
@@ -139,13 +132,12 @@ Chain Everything Together: Training and Evaluation
 
 def accuracy(logits: torch.FloatTensor, labels: torch.LongTensor) -> torch.FloatTensor:
     assert logits.shape[0] == labels.shape[0]
-    # TODO: complete the function to compute the accuracy
-    # Hint: follow the hints in the pdf description, the return should be a tensor of 0s and 1s with the same shape as labels
-    # labels is a tensor of shape (batch_size,)
-    # logits is a tensor of shape (batch_size, num_classes)
-
-    return ...
-
+    assert logits.shape[1] == labels.max() + 1
+    # compute the accuracy Hint: your return should be a tensor of 0s and 1s, indicating the correctness of each prediction. Remember that the prediction (logits) tensor has the shape of [batch_size, num_classes], check out torch.argmax for selecting the indices of the maximum value along certain dimension.
+    preds = torch.argmax(logits, dim=1)
+    correct = (preds == labels).float()
+    # return correct as a pytorch tensor
+    return correct
 
 def evaluate(model: SentimentClassifier, eval_dataloader: DataLoader) -> Tuple[float, float]:
     model.eval()
