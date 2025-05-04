@@ -28,8 +28,7 @@ Data Loading and Splits
 """
 
 
-def load_data() -> Tuple[
-    Dict[str, List[Union[int, str]]], Dict[str, List[Union[int, str]]], Dict[str, List[Union[int, str]]]]:
+def load_data() -> Tuple[Dict[str, List[Union[int, str]]], Dict[str, List[Union[int, str]]], Dict[str, List[Union[int, str]]]]:
     # download dataset
     print(f"{'-' * 10} Load Dataset {'-' * 10}")
     dataset = load_dataset("imdb")
@@ -60,7 +59,6 @@ Featurization
 def featurize(sentence: str, embeddings: gensim.models.keyedvectors.KeyedVectors) -> Union[None, torch.FloatTensor]:
     # sequence of word embeddings
     vectors = []
-
     # map each word to its embedding
     for word in word_tokenize(sentence.lower()):
         try:
@@ -68,20 +66,27 @@ def featurize(sentence: str, embeddings: gensim.models.keyedvectors.KeyedVectors
         except KeyError:
             pass
 
-    # TODO: complete the function to compute the average embedding of the sentence
-    # your return should be
-    # None - if the vector sequence is empty, i.e. the sentence is empty or None of the words in the sentence is in the embedding vocabulary
-    # A torch tensor of shape (embed_dim,) - the average word embedding of the sentence
-    # Hint: follow the hints in the pdf description
-
+    if len(vectors) == 0: # None - if the vector sequence is empty, i.e. the sentence is empty or None of the words in the sentence is in the embedding vocabulary
+        return None
+    else:
+        # stack the vectors into a tensor of shape (num_words, embed_dim)
+        vectors_tensor = torch.stack(vectors)
+        # compute the mean of the vectors along the first dimension
+        mean_vector = vectors_tensor.mean(dim=0)
+        return mean_vector
 
 def create_tensor_dataset(raw_data: Dict[str, List[Union[int, str]]],
                           embeddings: gensim.models.keyedvectors.KeyedVectors) -> TensorDataset:
     all_features, all_labels = [], []
     for text, label in tqdm(zip(raw_data['text'], raw_data['label'])):
-
         # TODO: complete the for loop to featurize each sentence
         # only add the feature and label to the list if the feature is not None
+        # We will first apply the featurization function we just completed to all the samples in the raw data, stack the feature tensors and labels into two single tensors to create a TensorDataset.
+
+        feature = featurize(text, embeddings)
+        if feature is not None:
+            all_features.append(feature)
+            all_labels.append(label)
 
         # your code ends here
     # stack all features and labels into two single tensors and create a TensorDataset
